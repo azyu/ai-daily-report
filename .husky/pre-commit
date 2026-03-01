@@ -1,0 +1,19 @@
+#!/usr/bin/env sh
+
+set -e
+
+echo "[pre-commit] basic safety checks..."
+
+# 1) block conflict markers
+if git diff --cached --name-only | xargs -I {} sh -c "grep -nE '^(<<<<<<<|=======|>>>>>>>)' '{}' >/dev/null 2>&1 && echo '{}'" | grep -q .; then
+  echo "❌ Merge conflict markers found in staged files."
+  exit 1
+fi
+
+# 2) block obvious secret patterns in staged diff
+if git diff --cached -- . ':(exclude).husky/pre-commit' | grep -E "(AKIA[0-9A-Z]{16}|AIza[0-9A-Za-z_\-]{20,}|github_pat_[A-Za-z0-9_]{20,}|postgresql://[^[:space:]]+|redis://[^[:space:]]+)" >/dev/null 2>&1; then
+  echo "❌ Potential secret detected in staged changes. Commit blocked."
+  exit 1
+fi
+
+echo "✅ pre-commit checks passed"

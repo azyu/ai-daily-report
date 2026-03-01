@@ -1,0 +1,10 @@
+#!/usr/bin/env sh
+
+set -e
+
+echo "[pre-push] running local quality gates..."
+
+npm run typecheck:frontend >/dev/null
+npm run build >/dev/null
+
+echo "✅ pre-push checks passed"

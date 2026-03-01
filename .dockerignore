@@ -1,0 +1,10 @@
+.git
+.gitignore
+.husky
+backend
+frontend/dist
+frontend/node_modules
+node_modules
+server-dist
+*.log
+npm-debug.log*

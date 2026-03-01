@@ -1,0 +1,40 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model DailyReport {
+  id          Int      @id @default(autoincrement())
+  reportDate  String   @unique
+  title       String
+  summary     String?
+  collectedAt DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  items       ReportItem[]
+}
+
+model ReportItem {
+  id           Int      @id @default(autoincrement())
+  reportId     Int
+  source       String
+  headline     String
+  summary      String
+  link         String
+  publishedAt  DateTime?
+  displayOrder Int      @default(0)
+
+  report DailyReport @relation(fields: [reportId], references: [id], onDelete: Cascade)
+}
+
+model AdminConfig {
+  id           Int      @id @default(1)
+  adminId      String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
