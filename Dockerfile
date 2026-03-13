@@ -24,7 +24,7 @@ ENV NODE_ENV=production
 ENV HOST=0.0.0.0
 ENV PORT=3000
 
-RUN apk add --no-cache openssl
+RUN apk add --no-cache openssl curl
 
 COPY package.json package-lock.json ./
 COPY api/prisma ./api/prisma
