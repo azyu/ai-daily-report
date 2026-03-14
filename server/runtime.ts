@@ -1,5 +1,7 @@
 import path from 'node:path';
 
+const REPORT_DATE_PATH_RE = /^\/reports\/(\d{4}-\d{2}-\d{2})\/?$/;
+
 export function toQueryObject(searchParams: URLSearchParams) {
   const query: Record<string, string> = {};
 
@@ -58,4 +60,8 @@ export function resolvePublicFile(publicDir: string, pathname: string) {
   }
 
   return resolved;
+}
+
+export function getReportDatePathname(pathname: string) {
+  return REPORT_DATE_PATH_RE.exec(pathname)?.[1] ?? null;
 }

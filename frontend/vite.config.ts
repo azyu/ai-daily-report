@@ -15,6 +15,10 @@ export default defineConfig({
       '/rss.xml': {
         target: 'http://localhost:4000',
         changeOrigin: true
+      },
+      '/reports': {
+        target: 'http://localhost:4000',
+        changeOrigin: true
       }
     }
   }

@@ -12,10 +12,11 @@ import adminStatus from '../api/admin-status.js';
 import cronDailyReport from '../api/cron/daily-report.js';
 import health from '../api/health.js';
 import jobStatus from '../api/job-status.js';
+import reportPreview from '../api/report-preview.js';
 import reports from '../api/reports.js';
 import rss from '../api/rss.js';
 import workerRun from '../api/worker-run.js';
-import { getContentType, resolvePublicFile, toQueryObject } from './runtime.js';
+import { getContentType, getReportDatePathname, resolvePublicFile, toQueryObject } from './runtime.js';
 
 type Handler = (req: any, res: any) => Promise<unknown> | unknown;
 
@@ -34,6 +35,7 @@ const routes = new Map<string, Handler>([
   ['/api/cron/daily-report', cronDailyReport],
   ['/api/health', health],
   ['/api/job-status', jobStatus],
+  ['/api/report-preview', reportPreview],
   ['/api/reports', reports],
   ['/api/worker-run', workerRun],
   ['/rss.xml', rss]
@@ -139,7 +141,8 @@ async function tryServeStatic(req: IncomingMessage, res: ServerResponse, pathnam
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url || '/', `http://${req.headers.host || 'localhost'}`);
   const pathname = url.pathname;
-  const handler = routes.get(pathname);
+  const reportDate = getReportDatePathname(pathname);
+  const handler = routes.get(pathname) || (reportDate ? reportPreview : undefined);
 
   if (!handler) {
     const served = await tryServeStatic(req, res, pathname);
@@ -155,6 +158,7 @@ const server = http.createServer(async (req, res) => {
 
   try {
     wrappedReq.query = toQueryObject(url.searchParams);
+    if (reportDate) wrappedReq.query.date = reportDate;
     wrappedReq.body = await readBody(req);
   } catch {
     wrappedRes.status(400).json({ message: 'invalid_json' });

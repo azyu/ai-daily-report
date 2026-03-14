@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import path from 'node:path';
 import test from 'node:test';
 
-import { getContentType, resolvePublicFile, toQueryObject } from './runtime.ts';
+import { getContentType, getReportDatePathname, resolvePublicFile, toQueryObject } from './runtime.ts';
 
 test('toQueryObject keeps the first value for duplicate keys', () => {
   const query = toQueryObject(new URLSearchParams('date=2026-03-13&date=2026-03-12&bootstrap=1'));
@@ -24,4 +24,10 @@ test('resolvePublicFile prevents directory traversal outside the public root', (
 
   assert.equal(resolvePublicFile(publicDir, '/assets/app.js'), path.resolve(publicDir, 'assets/app.js'));
   assert.equal(resolvePublicFile(publicDir, '/../secrets.txt'), null);
+});
+
+test('getReportDatePathname extracts valid shared report dates from public routes', () => {
+  assert.equal(getReportDatePathname('/reports/2026-03-14'), '2026-03-14');
+  assert.equal(getReportDatePathname('/reports/2026-03-14/'), '2026-03-14');
+  assert.equal(getReportDatePathname('/reports/today'), null);
 });

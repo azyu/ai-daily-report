@@ -1,6 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 
+import { buildReportHref, readReportDateFromSearch } from './urlState.js';
+
 type ReportListItem = { id: number; reportDate: string; title: string; collectedAt: string };
 type ReportItem = { id: number; source: string; headline: string; summary: string; link: string };
 type ReportDetail = { id: number; reportDate: string; title: string; summary?: string; items: ReportItem[]; debug?: { model?: string; createdAt?: string } };
@@ -52,10 +54,15 @@ function MainPage() {
       if (!r.ok) throw new Error('bootstrap_failed');
       const data = await r.json() as BootstrapPayload;
       const reports = Array.isArray(data?.reports) ? data.reports : [];
-      const nextSelectedDate = data?.selectedDate || reports[0]?.reportDate || '';
+      const requestedDate = readReportDateFromSearch(window.location.search);
+      const hasRequestedDate = !!requestedDate && reports.some((report) => report.reportDate === requestedDate);
+      const nextSelectedDate = hasRequestedDate ? requestedDate : data?.selectedDate || reports[0]?.reportDate || '';
+      const nextDetail = hasRequestedDate
+        ? (data?.detail?.reportDate === requestedDate ? data.detail : null)
+        : (data?.detail || null);
       setList(reports);
       setSelectedDate(nextSelectedDate);
-      setDetail(data?.detail || null);
+      setDetail(nextDetail);
       setDetailError('');
     } catch {
       setList([]);
@@ -91,6 +98,12 @@ function MainPage() {
     if (bootstrapping || !selectedDate || selectedDate === detail?.reportDate) return;
     loadDetail(selectedDate);
   }, [bootstrapping, detail?.reportDate, selectedDate]);
+  useEffect(() => {
+    if (bootstrapping) return;
+    const nextHref = buildReportHref(window.location.pathname, window.location.search, window.location.hash, selectedDate);
+    const currentHref = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+    if (nextHref !== currentHref) window.history.replaceState(null, '', nextHref);
+  }, [bootstrapping, selectedDate]);
 
   const isSwitchingDetail = detailLoading && !!detail && selectedDate !== detail.reportDate;
 
