@@ -16,7 +16,7 @@ import reportPreview from '../api/report-preview.js';
 import reports from '../api/reports.js';
 import rss from '../api/rss.js';
 import workerRun from '../api/worker-run.js';
-import { getContentType, getReportDatePathname, resolvePublicFile, toQueryObject } from './runtime.js';
+import { getContentType, getReportDatePathname, resolvePublicFile, shouldServeReportPreview, toQueryObject } from './runtime.js';
 
 type Handler = (req: any, res: any) => Promise<unknown> | unknown;
 
@@ -142,7 +142,9 @@ const server = http.createServer(async (req, res) => {
   const url = new URL(req.url || '/', `http://${req.headers.host || 'localhost'}`);
   const pathname = url.pathname;
   const reportDate = getReportDatePathname(pathname);
-  const handler = routes.get(pathname) || (reportDate ? reportPreview : undefined);
+  const handler =
+    routes.get(pathname) ||
+    (reportDate && shouldServeReportPreview(req.headers['user-agent']) ? reportPreview : undefined);
 
   if (!handler) {
     const served = await tryServeStatic(req, res, pathname);

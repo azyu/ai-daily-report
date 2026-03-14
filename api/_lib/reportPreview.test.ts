@@ -4,7 +4,8 @@ import test from 'node:test';
 import {
   buildReportPreviewDescription,
   buildReportPreviewHtml,
-  isReportDate
+  isReportDate,
+  isSocialPreviewUserAgent
 } from './reportPreview.ts';
 
 test('isReportDate accepts yyyy-mm-dd and rejects invalid input', () => {
@@ -39,6 +40,13 @@ test('buildReportPreviewDescription falls back to top headlines', () => {
   });
 
   assert.equal(description, '첫 번째 헤드라인 · 두 번째 헤드라인 · 세 번째 헤드라인');
+});
+
+test('isSocialPreviewUserAgent distinguishes common browsers from preview bots', () => {
+  assert.equal(isSocialPreviewUserAgent('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)'), false);
+  assert.equal(isSocialPreviewUserAgent('Discordbot/2.0'), true);
+  assert.equal(isSocialPreviewUserAgent('Slackbot-LinkExpanding 1.0 (+https://api.slack.com/robots)'), true);
+  assert.equal(isSocialPreviewUserAgent(undefined), true);
 });
 
 test('buildReportPreviewHtml renders escaped social metadata and redirect target', () => {

@@ -1,4 +1,11 @@
+import { readFile } from 'node:fs/promises';
+import path from 'node:path';
+
 const REPORT_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+const PREVIEW_BOT_RE =
+  /(discordbot|slackbot|twitterbot|facebookexternalhit|linkedinbot|whatsapp|telegrambot|kakaotalk|kakaostory|skypeuripreview|embedly|crawler|spider|preview|bot)/i;
+
+let cachedAppShellHtml: string | null = null;
 
 type PreviewItem = {
   headline: string;
@@ -31,6 +38,11 @@ function truncateText(input: string, maxLength: number) {
 
 export function isReportDate(value?: string) {
   return !!value && REPORT_DATE_RE.test(value);
+}
+
+export function isSocialPreviewUserAgent(userAgent?: string | string[]) {
+  const normalized = Array.isArray(userAgent) ? userAgent[0] : userAgent;
+  return !normalized || PREVIEW_BOT_RE.test(normalized);
 }
 
 export function buildReportPreviewDescription(report: PreviewReport) {
@@ -84,6 +96,19 @@ export function buildReportPreviewHtml(report: PreviewReport, siteUrl = getSiteU
 </html>`;
 }
 
+export async function readAppShellHtml() {
+  if (cachedAppShellHtml) return cachedAppShellHtml;
+
+  for (const candidate of getAppShellCandidatePaths()) {
+    try {
+      cachedAppShellHtml = await readFile(candidate, 'utf8');
+      return cachedAppShellHtml;
+    } catch {}
+  }
+
+  throw new Error('missing_app_shell_html');
+}
+
 function getSiteUrl() {
   const configured =
     process.env.APP_BASE_URL ||
@@ -94,4 +119,13 @@ function getSiteUrl() {
   return configured.startsWith('http://') || configured.startsWith('https://')
     ? configured.replace(/\/+$/, '')
     : `https://${configured.replace(/\/+$/, '')}`;
+}
+
+function getAppShellCandidatePaths() {
+  const cwd = process.cwd();
+  return [
+    path.join(cwd, 'frontend', 'dist', 'index.html'),
+    path.join(cwd, 'index.html'),
+    path.join(cwd, 'frontend', 'index.html')
+  ];
 }

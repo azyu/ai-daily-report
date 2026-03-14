@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 
-import { buildReportHref, readReportDateFromSearch } from './urlState.js';
+import { buildReportHref, readReportDate } from './urlState.js';
 
 type ReportListItem = { id: number; reportDate: string; title: string; collectedAt: string };
 type ReportItem = { id: number; source: string; headline: string; summary: string; link: string };
@@ -54,7 +54,7 @@ function MainPage() {
       if (!r.ok) throw new Error('bootstrap_failed');
       const data = await r.json() as BootstrapPayload;
       const reports = Array.isArray(data?.reports) ? data.reports : [];
-      const requestedDate = readReportDateFromSearch(window.location.search);
+      const requestedDate = readReportDate(window.location.pathname, window.location.search);
       const hasRequestedDate = !!requestedDate && reports.some((report) => report.reportDate === requestedDate);
       const nextSelectedDate = hasRequestedDate ? requestedDate : data?.selectedDate || reports[0]?.reportDate || '';
       const nextDetail = hasRequestedDate
