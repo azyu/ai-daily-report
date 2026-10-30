@@ -36,7 +36,7 @@ The production source of truth is `api/ + frontend/`. The old `backend/` directo
 
 ## Requirements
 
-- Node.js 24+
+- Node.js 26+
 - npm
 - Postgres
 - Redis
